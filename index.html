@@ -4,6 +4,10 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Inspección post-sismo · San José, Caldas</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#1f6b45">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
 <style>
 :root{
   --paper:#ffffff; --field:#f1f4f2; --ink:#1b2420; --muted:#5a6660; --line:#c8d0cb;
@@ -628,6 +632,7 @@ function sigPad(init){
 function sigData(){return sigInk?$('#cfSig').toDataURL('image/png'):''}
 window.addEventListener('beforeunload',()=>{if(cur&&!$('#vEdit').classList.contains('hidden')){Object.assign(cur,readForm());dbPut(cur)}});
 
+if('serviceWorker' in navigator&&location.protocol.startsWith('http'))window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
 openDB().then(renderList).catch(()=>{$('#list').innerHTML='<p class="empty">Este navegador no permite guardar fichas. Abra la herramienta en Chrome.</p>'});
 </script>
 </body>
