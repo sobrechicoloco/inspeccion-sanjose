@@ -1,9 +1,10 @@
 // Inspección AIS San José · caché sin conexión
+// v6: fotos desde galería con fecha de toma, duplicar en el esquema, aviso de respaldo
 // v5: lista RUD desde el consolidado, con observaciones
 // v4: búsqueda en la lista RUD local
 // v3: imágenes de la ficha y coordenadas en archivos aparte; capas con cruce urbano-rural
 // Al cambiar cualquier archivo de la app, suba también este archivo con un número de versión nuevo.
-const V='inspAIS-v5';
+const V='inspAIS-v6';
 const CORE=['./','./index.html','./manifest.webmanifest','./icon-192.png','./icon-512.png',
   './js/casillas.js',
   './img/ficha_p1.png','./img/ficha_p2.png','./img/ficha_p3.png','./img/ficha_p4.png',
