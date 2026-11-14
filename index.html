@@ -108,6 +108,8 @@ canvas#cfSig{width:100%;aspect-ratio:3/1;border:1px solid var(--line);border-rad
 .fsel{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:6px;max-height:60vh;overflow:auto}
 .fsel button{padding:4px;border:1px solid var(--line);border-radius:6px;background:var(--field);color:var(--ink);font-size:.85rem}
 .fsel img{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:4px;display:block;margin-bottom:2px}
+.bkban{border-radius:8px;padding:10px 12px;margin:8px 0;display:flex;gap:10px;align-items:center;justify-content:space-between;border:1px solid var(--line);background:var(--field)}
+.bkban.rojo{border-color:#b42318;background:rgba(180,35,24,.10)}
 .rudq{margin-top:6px}.rudq input{width:100%}
 .rudres{display:grid;gap:4px;margin-top:6px}
 .rudres button{text-align:left;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--field);color:var(--ink);font:inherit}
@@ -171,6 +173,7 @@ canvas#cfSig{width:100%;aspect-ratio:3/1;border:1px solid var(--line);border-rad
       <button class="btn" id="bRud">Lista RUD</button>
     </div>
     <p class="hint" id="cfgInfo"></p>
+    <div id="bkBan"></div>
     <div class="list" id="list"></div>
     <h3>Fin de jornada</h3>
     <p class="hint">Exporte la jornada y suba los archivos a la carpeta de Drive antes de borrar fichas del celular.</p>
@@ -317,7 +320,7 @@ const SECS=[
 ['s14','14. Inspectores',()=>`<div class="grid2">${fld('Código de la comisión',inp('comision'))}${fld('Número de evaluadores',num('nEval','step="1"'))}</div>${fld('Líder de la comisión',inp('lider'))}<div class="sigbox" id="sigBox"></div>`],
 ['s15','15. Fecha de inspección',()=>`<div class="grid2">${fld('Fecha',inp('fecha','date'))}${fld('Hora',inp('hora','time'))}</div>`],
 ['s16','16. Esquema',()=>`<p class="hint">El esquema se imprime sobre la cuadrícula oficial de la página 4. El editor se abre en pantalla completa; gire el celular para dibujar más grande.</p><canvas id="skPrev" width="1170" height="614"></canvas><div class="row" style="margin-top:6px"><button type="button" class="btn pri" id="skOpen">Abrir editor de esquema</button></div>`],
-['s17','17. Fotografías',()=>`<label class="btn pri" for="fFoto" style="display:inline-block">Tomar o agregar fotos</label><input type="file" id="fFoto" accept="image/*" capture="environment" multiple class="hidden"><p class="hint">Las fotos se reducen a 1600 px para que el PDF no sea muy pesado.</p><div class="fotos" id="fotos"></div>`]
+['s17','17. Fotografías',()=>`<div class="row"><label class="btn pri" for="fFoto">Tomar foto</label><label class="btn" for="fGal">Subir desde galería</label></div><input type="file" id="fFoto" accept="image/*" capture="environment" multiple class="hidden"><input type="file" id="fGal" accept="image/*" multiple class="hidden"><p class="hint">Las fotos se reducen a 1600 px para que el PDF no sea muy pesado.</p><div class="fotos" id="fotos"></div>`]
 ];
 /* Coordenadas de las casillas de la ficha AIS: js/casillas.js */
 const BOXX={pisoMax:[0,...MAP.bx.piso_col.slice(1)]};
@@ -943,14 +946,14 @@ function skEditor(){
    <button class="btn" id="skFill">Relleno: no</button>
    <select id="skEw" class="btn" aria-label="Grosor del borrador"><option value="12">Borrador fino</option><option value="24" selected>Borrador medio</option><option value="48">Borrador grueso</option></select>
    <button class="btn on" id="skMag">Imán: sí</button><button class="btn" id="skSig">Significados</button></div>
-   <div class="grp" id="skSelG"><button class="btn" id="skAll">Seleccionar todo</button><button class="btn" id="skNone">Quitar selección</button><button class="btn" id="skUp">Agrandar</button><button class="btn" id="skDn">Reducir</button><button class="btn hidden" id="skFoto">Cambiar foto</button><button class="btn dan" id="skDel">Borrar</button></div>
+   <div class="grp" id="skSelG"><button class="btn" id="skAll">Seleccionar todo</button><button class="btn" id="skNone">Quitar selección</button><button class="btn" id="skUp">Agrandar</button><button class="btn" id="skDn">Reducir</button><button class="btn" id="skDup">Duplicar</button><button class="btn hidden" id="skFoto">Cambiar foto</button><button class="btn dan" id="skDel">Borrar</button></div>
    <div class="grp"><button class="btn" id="skZi" aria-label="Acercar">+</button><button class="btn" id="skZo" aria-label="Alejar">−</button><button class="btn" id="skZf">Ajustar</button></div>
    <div class="grp"><button class="btn" id="skUn">Deshacer</button><button class="btn" id="skRe">Rehacer</button><button class="btn dan" id="skCl">Borrar todo</button></div></div>
    <p class="hint" id="skHint"></p>
    <div class="cv"><canvas width="${SKW*2}" height="${SKH*2}"></canvas></div>`;
   document.body.appendChild(ov);
   const c=ov.querySelector('canvas'),ctx=c.getContext('2d'),wrapEl=ov.querySelector('.cv'),q=s=>ov.querySelector(s);
-  const HINT={sel:'Toque elementos para sumarlos a la selección; tóquelos otra vez para quitarlos. Arrastre para mover y use el cuadro azul o Agrandar/Reducir para cambiar el tamaño.',line:'El imán ajusta a la cuadrícula y a 0°, 45° y 90°.',rect:'Arrastre de una esquina a la opuesta.',sq:'Toque para una figura de un cuadro, o arrastre para hacerla más grande.',ci:'Toque para una figura de un cuadro, o arrastre para hacerla más grande.',tr:'Toque para una figura de un cuadro, o arrastre para hacerla más grande.',crack:'Dibuje la grieta a mano alzada.',free:'Trazo a mano alzada con el tipo de línea elegido.',arrow:'Arrastre desde donde irá el texto hasta lo que quiere señalar.',text:'Toque donde quiere el texto.',foto:'Toque el lugar donde se tomó la foto y elíjala.',move:'Arrastre para correr todo el dibujo sobre la cuadrícula.',erase:'Pase el borrador sobre lo que quiere borrar.'};
+  const HINT={sel:'Toque elementos para sumarlos a la selección; tóquelos otra vez para quitarlos. Arrastre para mover, use el cuadro azul o Agrandar/Reducir para el tamaño, y Duplicar para copiar (por ejemplo, otro piso).',line:'El imán ajusta a la cuadrícula y a 0°, 45° y 90°.',rect:'Arrastre de una esquina a la opuesta.',sq:'Toque para una figura de un cuadro, o arrastre para hacerla más grande.',ci:'Toque para una figura de un cuadro, o arrastre para hacerla más grande.',tr:'Toque para una figura de un cuadro, o arrastre para hacerla más grande.',crack:'Dibuje la grieta a mano alzada.',free:'Trazo a mano alzada con el tipo de línea elegido.',arrow:'Arrastre desde donde irá el texto hasta lo que quiere señalar.',text:'Toque donde quiere el texto.',foto:'Toque el lugar donde se tomó la foto y elíjala.',move:'Arrastre para correr todo el dibujo sobre la cuadrícula.',erase:'Pase el borrador sobre lo que quiere borrar.'};
   const fitC=()=>{const W=wrapEl.clientWidth-8,Hh=wrapEl.clientHeight-8,k=Math.min(W/SKW,Hh/SKH);c.style.width=SKW*k+'px';c.style.height=SKH*k+'px'};
   const clampV=()=>{V.z=Math.min(6,Math.max(1,V.z));V.x=Math.min(SKW-SKW/V.z,Math.max(0,V.x));V.y=Math.min(SKH-SKH/V.z,Math.max(0,V.y))};
   const selArr=()=>[...sel].filter(i=>items[i]).sort((a,b)=>a-b);
@@ -967,7 +970,7 @@ function skEditor(){
     q('#skFill').classList.toggle('hidden',s?!shIt.length:!['sq','ci','tr'].includes(tool));
     q('#skEw').classList.toggle('hidden',tool!=='erase');
     q('#skSelG').classList.toggle('hidden',!s);
-    ['#skNone','#skUp','#skDn','#skDel'].forEach(id=>q(id).disabled=!A.length);
+    ['#skNone','#skUp','#skDn','#skDel'].forEach(id=>q(id).disabled=!A.length);q('#skDup').disabled=!A.some(it=>it.t!=='foto');
     q('#skFoto').classList.toggle('hidden',!(A.length===1&&A[0].t==='foto'));
     q('#skHint').textContent=HINT[tool]+' Con dos dedos acerca y mueve la vista.'};
   const setTool=t=>{tool=t;syncUI();draw()};
@@ -1045,6 +1048,13 @@ function skEditor(){
   q('#skMag').onclick=e=>{mag=!mag;e.target.textContent='Imán: '+(mag?'sí':'no');e.target.classList.toggle('on',mag)};
   q('#skAll').onclick=()=>{sel=new Set(items.map((it,i)=>it.t==='erase'?-1:i).filter(i=>i>=0));syncUI();draw()};
   q('#skNone').onclick=()=>{sel.clear();syncUI();draw()};
+  /* Duplicar: copia a la derecha (o debajo si no cabe); las marcas F# no se copian; la copia queda seleccionada */
+  q('#skDup').onclick=()=>{const A=selArr().filter(i=>items[i].t!=='foto'&&items[i].t!=='erase');if(!A.length)return;
+    const bx=A.map(i=>skBox(items[i])),u=[Math.min(...bx.map(b=>b[0])),Math.min(...bx.map(b=>b[1])),Math.max(...bx.map(b=>b[2])),Math.max(...bx.map(b=>b[3]))];
+    const w=u[2]-u[0],h=u[3]-u[1];let dx=Math.ceil((w+CW)/CW)*CW,dy=0;
+    if(u[2]+dx>SKW){dx=0;dy=Math.ceil((h+CH)/CH)*CH;if(u[3]+dy>SKH){dx=CW;dy=CH}}
+    commit();const n0=items.length;A.forEach(i=>{const c=JSON.parse(JSON.stringify(items[i]));skMove(c,dx,dy);items.push(c)});
+    sel=new Set(A.map((_,k)=>n0+k));syncUI();draw();toast('Copia creada: arrástrela o ajústela')};
   q('#skUp').onclick=()=>scaleSel(1.1);q('#skDn').onclick=()=>scaleSel(1/1.1);
   q('#skDel').onclick=()=>{const A=selArr();if(!A.length)return;commit();items=items.filter((it,i)=>!sel.has(i));sel.clear();syncUI();draw()};
   q('#skFoto').onclick=async()=>{const A=selArr();const it=A.length===1?items[A[0]]:null;if(!it||it.t!=='foto')return;const fid=await skFotoPick();if(fid&&fid!==it.fid){commit();it.fid=fid;draw()}};
@@ -1064,8 +1074,31 @@ function skEditor(){
 
 /* ---------- Fotos ---------- */
 function shrink(file){return new Promise((ok,ko)=>{const u=URL.createObjectURL(file),im=new Image();im.onload=()=>{const k=Math.min(1,1600/Math.max(im.width,im.height));const c=document.createElement('canvas');c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);c.getContext('2d').drawImage(im,0,0,c.width,c.height);URL.revokeObjectURL(u);ok(c.toDataURL('image/jpeg',0.72))};im.onerror=ko;im.src=u})}
+/* Fecha de toma desde los metadatos EXIF (DateTimeOriginal o DateTime). Se lee antes de reducir la foto, porque al reducirla se pierde. */
+async function exifFecha(file){
+  try{
+    const b=new DataView(await file.slice(0,262144).arrayBuffer());if(b.getUint16(0)!==0xFFD8)return '';
+    let o=2;while(o+4<b.byteLength){const m=b.getUint16(o),L=b.getUint16(o+2);
+      if(m===0xFFE1&&b.getUint32(o+4)===0x45786966){const t=o+10,le=b.getUint16(t)===0x4949,u16=x=>b.getUint16(t+x,le),u32=x=>b.getUint32(t+x,le);
+        const str=(x,n)=>{let r='';for(let i=0;i<n-1;i++)r+=String.fromCharCode(b.getUint8(t+x+i));return r};
+        const ifd=(x,want)=>{const n=u16(x),f={};for(let i=0;i<n;i++){const e=x+2+i*12,tag=u16(e);if(want.includes(tag)){const cnt=u32(e+4);f[tag]=tag===0x8769?u32(e+8):str(u32(e+8),cnt)}}return f};
+        const f0=ifd(u32(4),[0x0132,0x8769]);let d='';if(f0[0x8769]){const fe=ifd(f0[0x8769],[0x9003]);d=fe[0x9003]||''}d=d||f0[0x0132]||'';
+        const q=/^(\d{4}):(\d{2}):(\d{2}) (\d{2}):(\d{2})/.exec(d);return q&&q[1]!=='0000'?`${q[1]}-${q[2]}-${q[3]}T${q[4]}:${q[5]}`:''}
+      if((m&0xFF00)!==0xFF00||m===0xFFDA)break;o+=2+L}
+  }catch(e){}
+  return '';
+}
+const fTom=t=>t?`${t.slice(8,10)}/${t.slice(5,7)}/${t.slice(0,4)} ${t.slice(11,16)}`:'';
+function fotoNota(f){
+  if(f.tom==null)return '';
+  if(!f.tom)return '<small class="hint">Sin fecha en la foto (puede venir de WhatsApp o estar editada).</small>';
+  let s=`<small class="hint">Tomada el ${fTom(f.tom)} (dato de la foto).</small>`;
+  if(cur.fecha){const d=Math.round((new Date(cur.fecha+'T00:00')-new Date(f.tom.slice(0,10)+'T00:00'))/864e5);
+    if(d)s+=`<small class="gpslow" style="display:block">Tomada ${Math.abs(d)} día${Math.abs(d)===1?'':'s'} ${d>0?'antes':'después'} de la fecha de inspección.</small>`}
+  return s;
+}
 function renderFotos(){
-  $('#fotos').innerHTML=(cur.fotos||[]).map((f,i)=>`<figure><img src="${f.data}" alt="Foto ${i+1}"><input type="text" data-cap="${i}" placeholder="Foto ${i+1}: descripción" value="${H(f.cap)}"><button type="button" class="btn dan" data-delf="${i}">Quitar</button></figure>`).join('');
+  $('#fotos').innerHTML=(cur.fotos||[]).map((f,i)=>`<figure><img src="${f.data}" alt="Foto ${i+1}">${fotoNota(f)}<input type="text" data-cap="${i}" placeholder="Foto ${i+1}: descripción" value="${H(f.cap)}"><button type="button" class="btn dan" data-delf="${i}">Quitar</button></figure>`).join('');
 }
 
 /* ---------- Navegación ---------- */
@@ -1084,6 +1117,10 @@ async function newFicha(){
 }
 async function renderList(){
   const all=(await dbAll()).sort((a,b)=>b.created-a.created);
+  /* Aviso de respaldo: fichas nuevas o modificadas después de la última exportación; rojo si alguna lleva más de 12 h */
+  {const pend=all.filter(d=>!d.exportedAt||d.updated>d.exportedAt),ban=$('#bkBan');
+    if(ban){if(!pend.length)ban.innerHTML='';else{const viejo=Math.min(...pend.map(d=>d.exportedAt&&d.exportedAt>(d.created||0)?d.exportedAt:(d.created||d.updated||Date.now()))),rojo=Date.now()-viejo>12*36e5;
+      ban.innerHTML=`<div class="bkban${rojo?' rojo':''}"><span>${rojo?'<b>Exporte hoy:</b> hay fichas sin respaldo desde hace más de 12 horas. ':''}${pend.length} ficha${pend.length===1?'':'s'} con cambios sin exportar.</span><button type="button" class="btn pri" id="bkGo">Exportar</button></div>`}}}
   $('#cfgInfo').textContent=`Inspector: ${ls.get('nombre','sin nombre')} · prefijo ${ls.get('prefijo','A')}`;
   $('#list').innerHTML=all.length?all.map(d=>{
     const f=isNoInsp(d)?null:habFinal(d);const m=missing(d).length;
@@ -1189,7 +1226,7 @@ function pdfPages(d){
   const fs=d.fotos||[];O('fotosSN',fs.length?'Sí':'No');
   if(fs.length){P[3].push(`<span class="a t" style="left:252pt;top:392pt;height:12pt;font-size:8pt">${fs.length}</span><span class="a t" style="left:372pt;top:392pt;height:12pt;font-size:8pt">1</span><span class="a t" style="left:424pt;top:392pt;height:12pt;font-size:8pt">${fs.length}</span>`)}
   const grid=(arr,x0,y0,W,Hh,off,fix)=>{const n=arr.length;const [c,r]=fix||[[1,1],[1,1],[2,1],[3,1],[2,2],[3,2],[3,2]][n];const g=6,cw=(W-(c-1)*g)/c,ch=(Hh-(r-1)*g)/r;
-    return arr.map((p,i)=>`<div class="a ph" style="left:${x0+(i%c)*(cw+g)}pt;top:${y0+Math.floor(i/c)*(ch+g)}pt;width:${cw}pt"><img src="${p.data}" style="height:${ch-9}pt" alt=""><div>Foto ${off+i+1}. ${H(p.cap)}</div></div>`).join('')};
+    return arr.map((p,i)=>`<div class="a ph" style="left:${x0+(i%c)*(cw+g)}pt;top:${y0+Math.floor(i/c)*(ch+g)}pt;width:${cw}pt"><img src="${p.data}" style="height:${ch-9}pt" alt=""><div>Foto ${off+i+1}${p.tom?' · '+fTom(p.tom):''}. ${H(p.cap)}</div></div>`).join('')};
   P[3].push(grid(fs.slice(0,6),46,414,520,334,0));
   let html=P.map((p,i)=>`<div class="pg"><img class="bg" src="${BG[i]}" alt="">${p.join('')}</div>`).join('');
   for(let i=6;i<fs.length;i+=4){const ch=fs.slice(i,i+4);
@@ -1210,8 +1247,9 @@ async function imprimir(list){
 /* ---------- Eventos ---------- */
 form.addEventListener('input',e=>{if(e.target.id==='rudQ'){rudBuscar();return}if(e.target.dataset.mir){const src=form.querySelector(`[name="${e.target.dataset.mir}"]`);if(src){src.value=e.target.value;onInput()}else{cur[e.target.dataset.mir]=e.target.value;touch();dbPut(cur)}return}
   if(['cMz','cPr','edif','predio'].includes(e.target.name))e.target.value=e.target.value.replace(/\D/g,'');if(['cMz','cPr','predio'].includes(e.target.name)){cur.pFuente='manual';cur.pUni='';cur.pRural='';cur.pZC=0}if(e.target.name==='lat'||e.target.name==='lon'){cur.gpsAcc='';setTimeout(gpsShow,0)}if(e.target.dataset.cap!=null){cur.fotos[+e.target.dataset.cap].cap=e.target.value;touch();dbPut(cur);return}onInput()});
-form.addEventListener('change',e=>{if(e.target.id==='fFoto')return;onInput();if(e.target.name==='insp')inspCambio()});
+form.addEventListener('change',e=>{if(e.target.id==='fFoto'||e.target.id==='fGal')return;onInput();if(e.target.name==='insp')inspCambio()});
 form.addEventListener('focusout',e=>{if(e.target.dataset.mir)setTimeout(renderS13,0)});
+form.addEventListener('change',e=>{if(e.target.name==='fecha'&&(cur.fotos||[]).length)renderFotos()});
 /* Al pasar a «No se inspeccionó»: borrar datos de las secciones que se ocultan, o volver al tipo anterior */
 let inspPrev='';
 async function inspCambio(){
@@ -1245,12 +1283,13 @@ form.addEventListener('click',async e=>{
     renderFotos();skPreview();touch();refresh();dbPut(cur)}
 });
 form.addEventListener('change',async e=>{
-  if(e.target.id!=='fFoto')return;
+  if(e.target.id!=='fFoto'&&e.target.id!=='fGal')return;
   const files=[...e.target.files];toast('Procesando '+files.length+' foto(s)…');
-  for(const f of files){try{cur.fotos.push({id:'p'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),data:await shrink(f),cap:''})}catch(_){toast('No se pudo leer una imagen')}}
+  for(const f of files){try{const tom=await exifFecha(f);cur.fotos.push({id:'p'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),data:await shrink(f),cap:'',tom,org:e.target.id==='fGal'?'galeria':'camara'})}catch(_){toast('No se pudo leer una imagen')}}
   e.target.value='';renderFotos();touch();dbPut(cur);
 });
 $('#bNew').onclick=newFicha;
+document.addEventListener('click',e=>{if(e.target.id==='bkGo')$('#bExp').click()});
 $('#bBack').onclick=async()=>{Object.assign(cur,readForm());await dbPut(cur);show('list');renderList()};
 $('#bCheck').onclick=()=>{const m=pdfFaltan(readFormSafe());dialog(m.length?`<p><b>${m.length} pendientes:</b></p><ul>${m.map(x=>`<li>${H(x)}</li>`).join('')}</ul>`:'<p>La ficha está completa.</p>')};
 function readFormSafe(){Object.assign(cur,readForm());return cur}
